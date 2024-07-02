@@ -17,4 +17,8 @@ app.use(express.json());
 app.use(logger("dev"));
 app.use(express.urlencoded({ extended: false }));
 
+app.get("/", (_, res) => {
+  res.send("WAK WAW");
+});
+
 export default app;

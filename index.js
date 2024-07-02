@@ -16,6 +16,7 @@ let group = [];
 
 io.on("connect", (socket) => {
   // socket.handshake?.headers?.token
+  console.log("DJOIN____");
   socket.on("JOIN", (name) => {
     const id = `${name}--${Date.now()}`;
     const me = {
@@ -75,7 +76,26 @@ io.on("connect", (socket) => {
     }
     socket.broadcast.emit("AVAILABLE_USER", availableUser);
   });
+
+  // ========================================================================
+
+  socket.on("offer", (data) => {
+    io.to(data.to).emit("offer", data.offer);
+  });
+
+  socket.on("answer", (data) => {
+    io.to(data.to).emit("answer", data.answer);
+  });
+
+  socket.on("candidate", (data) => {
+    io.to(data.to).emit("candidate", data.candidate);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
 });
 
 // run server
-server.listen(process.env.PORT);
+console.log(process.env.PORT);
+server.listen(3001);
