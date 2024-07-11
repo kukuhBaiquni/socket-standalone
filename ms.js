@@ -6,6 +6,9 @@ import { nanoid } from "nanoid";
 import { produce } from "immer";
 import OpenAI from "openai";
 import axios from "axios";
+import { config } from "dotenv";
+
+config();
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -18,7 +21,7 @@ const io = new Server(server, {
 const API_URL = "https://app.lenna.ai/backend/api/text-to-speech";
 
 const openai = new OpenAI({
-  apiKey: "",
+  apiKey: process.env.OPEN_API_KEY,
 });
 
 io.on("connect", (socket) => {
@@ -27,30 +30,35 @@ io.on("connect", (socket) => {
   socket.on("ON_SPEECH_END", async (data) => {
     console.log("DATA", data);
 
-    if (data) {
+    if (data.length) {
       const chatCompletion = await openai.chat.completions.create({
-        messages: [
-          {
-            role: "user",
-            content: data,
-          },
-        ],
+        messages: data,
         model: "gpt-3.5-turbo",
       });
 
-      const response = await axios({
-        url: API_URL,
-        responseType: "arraybuffer",
-        params: {
-          text: chatCompletion?.choices?.[0]?.message?.content,
-          gender: "female",
-          lang: "id",
-          speaking_rate: 1,
-          pitch: 1,
-        },
+      const audio = await openai.audio.speech.create({
+        model: "tts-1-hd",
+        voice: "alloy",
+        input: chatCompletion?.choices?.[0]?.message?.content,
       });
 
-      socket.emit("SPEECH_RESULT", response.data);
+      const buffer = Buffer.from(await audio.arrayBuffer());
+      // const response = await axios({
+      //   url: API_URL,
+      //   responseType: "arraybuffer",
+      //   params: {
+      //     text: chatCompletion?.choices?.[0]?.message?.content,
+      //     gender: "female",
+      //     lang: "id",
+      //     speaking_rate: 1,
+      //     pitch: 1,
+      //   },
+      // });
+
+      socket.emit("SPEECH_RESULT", {
+        buffer: buffer,
+        text: chatCompletion?.choices?.[0]?.message?.content,
+      });
     }
   });
 
