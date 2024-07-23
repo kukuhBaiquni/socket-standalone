@@ -8,8 +8,7 @@ import { produce } from "immer";
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    method: ["*"],
+    origin: "https://ms-client.vercel.app/",
   },
 });
 
